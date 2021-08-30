@@ -1,66 +1,64 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { CssBaseline } from '@material-ui/core';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { connect } from 'react-redux';
 
+import { addToCart, addToProducts, addToOrder, addNewErrorMessage } from './actions/actions';
 import { Navbar, Products, Cart, Checkout } from './components';
 import { commerce } from './lib/commerce';
 
-const App = () => {
-  const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [products, setProducts] = useState([]);
-  const [cart, setCart] = useState({});
-  const [order, setOrder] = useState({});
-  const [errorMessage, setErrorMessage] = useState('');
+const App = ({addToCart, addToProducts}) => {
 
   const fetchProducts = async () => {
     const { data } = await commerce.products.list();
 
-    setProducts(data);
+    addToProducts(data);
   };
 
   const fetchCart = async () => {
-    setCart(await commerce.cart.retrieve());
+    const res = await commerce.cart.retrieve()
+    addToCart(res);
   };
 
   const handleAddToCart = async (productId, quantity) => {
     const item = await commerce.cart.add(productId, quantity);
 
-    setCart(item.cart);
+    addToCart(item.cart);
   };
 
   const handleUpdateCartQty = async (lineItemId, quantity) => {
     const response = await commerce.cart.update(lineItemId, { quantity });
 
-    setCart(response.cart);
+    addToCart(response.cart);
   };
 
   const handleRemoveFromCart = async (lineItemId) => {
     const response = await commerce.cart.remove(lineItemId);
 
-    setCart(response.cart);
+    addToCart(response.cart);
   };
 
   const handleEmptyCart = async () => {
     const response = await commerce.cart.empty();
 
-    setCart(response.cart);
+    addToCart(response.cart);
   };
 
   const refreshCart = async () => {
     const newCart = await commerce.cart.refresh();
 
-    setCart(newCart);
+    addToCart(newCart);
   };
 
   const handleCaptureCheckout = async (checkoutTokenId, newOrder) => {
     try {
       const incomingOrder = await commerce.checkout.capture(checkoutTokenId, newOrder);
 
-      setOrder(incomingOrder);
+      addToOrder(incomingOrder);
 
       refreshCart();
     } catch (error) {
-      setErrorMessage(error.data.error.message);
+      addNewErrorMessage(error.data.error.message);
     }
   };
 
@@ -69,22 +67,21 @@ const App = () => {
     fetchCart();
   }, []);
 
-  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
 
   return (
     <Router>
       <div style={{ display: 'flex' }}>
         <CssBaseline />
-        <Navbar totalItems={cart.total_items} handleDrawerToggle={handleDrawerToggle} />
+        <Navbar />
         <Switch>
           <Route exact path="/">
-            <Products products={products} onAddToCart={handleAddToCart} handleUpdateCartQty />
+            <Products onAddToCart={handleAddToCart} handleUpdateCartQty />
           </Route>
           <Route exact path="/cart">
-            <Cart cart={cart} onUpdateCartQty={handleUpdateCartQty} onRemoveFromCart={handleRemoveFromCart} onEmptyCart={handleEmptyCart} />
+            <Cart onUpdateCartQty={handleUpdateCartQty} onRemoveFromCart={handleRemoveFromCart} onEmptyCart={handleEmptyCart} />
           </Route>
           <Route path="/checkout" exact>
-            <Checkout cart={cart} order={order} onCaptureCheckout={handleCaptureCheckout} error={errorMessage} />
+            <Checkout onCaptureCheckout={handleCaptureCheckout} />
           </Route>
         </Switch>
       </div>
@@ -92,4 +89,11 @@ const App = () => {
   );
 };
 
-export default App;
+const mapDispatchToProps = {
+  addToCart,
+  addToProducts,
+  addToOrder,
+  addNewErrorMessage
+}
+
+export default connect(null, mapDispatchToProps)(App);

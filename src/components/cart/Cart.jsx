@@ -1,6 +1,7 @@
 import React from 'react';
 import { Container, Typography, Button,Grid } from '@material-ui/core';
 import { Link } from 'react-router-dom';
+import { connect } from 'react-redux';
 
 import useStyles from './styles';
 import CartItem from './cartItem/CartItem';
@@ -46,4 +47,8 @@ const Cart = ({ cart, onUpdateCartQty, onRemoveFromCart, onEmptyCart }) => {
   );
 };
 
-export default Cart
+const mapStateToProps = (state) => ({
+  cart: state.cartReducer.cart
+});
+
+export default connect(mapStateToProps)(Cart)

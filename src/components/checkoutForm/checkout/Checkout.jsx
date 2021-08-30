@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CssBaseline, Paper, Stepper, Step, StepLabel, Typography, CircularProgress, Divider, Button } from '@material-ui/core';
 import { Link, useHistory } from 'react-router-dom';
+import { connect } from 'react-redux';
 
 import { commerce } from '../../../lib/commerce';
 import AddressForm from '../AddressForm';
@@ -9,7 +10,7 @@ import useStyles from './styles';
 
 const steps = ['Shipping address', 'Payment details'];
 
-const Checkout = ({ cart, onCaptureCheckout, order, error }) => {
+const Checkout = ({ cart, error, onCaptureCheckout, order }) => {
   const [checkoutToken, setCheckoutToken] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
   const [shippingData, setShippingData] = useState({});
@@ -92,4 +93,13 @@ const Checkout = ({ cart, onCaptureCheckout, order, error }) => {
   );
 };
 
-export default Checkout;
+const mapStateToProps = (state) => {
+  return {
+    cart: state.cartReducer.cart,
+    order: state.orderReducer.order,
+    error: state.errorReducer
+  } 
+};
+
+
+export default connect(mapStateToProps)(Checkout);
